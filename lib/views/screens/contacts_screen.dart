@@ -82,14 +82,10 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       height: 50,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(100),
-                        color: Colors.blue,
                       ),
+                      child: const Icon(Icons.person),
                     ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 20,
-                      color: Colors.black,
-                    ),
+                    
                   ),
                 ),
               );
