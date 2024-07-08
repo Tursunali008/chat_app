@@ -1,16 +1,22 @@
-
-import 'package:chat_app/controller/auth_controller.dart';
 import 'package:chat_app/controller/chat_controller.dart';
 import 'package:chat_app/models/chat_model.dart';
 import 'package:chat_app/services/chat_services.dart';
+import 'package:chat_app/services/firabase_noticication_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_cloud_firestore/firebase_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class RoomMessageScreen extends StatefulWidget {
+  final int index;
   final String email;
+  final String token;
+
   const RoomMessageScreen({
     super.key,
     required this.email,
+    required this.token,
+    required this.index,
   });
 
   @override
@@ -18,46 +24,52 @@ class RoomMessageScreen extends StatefulWidget {
 }
 
 class _RoomMessageScreenState extends State<RoomMessageScreen> {
-  final authController = AuthController();
   final chatController = ChatController();
   final smsTextEditingController = TextEditingController();
-  final chatFirebaseServices = ChatFirebaseServices();
+  final chatFirebaseServices = ChatFirebaseService();
+  late final chatRoomId;
+  @override
+  void initState() {
+    super.initState();
+    dynamic box = [widget.email, FirebaseAuth.instance.currentUser!.email]
+      ..sort();
+    chatRoomId = box.join();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(0, 26, 28, 50),
       appBar: AppBar(
+        foregroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(0, 26, 28, 50),
         centerTitle: true,
         title: const Text(
-          "Chat with tester version",
+          "Chat",
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              authController.signOut();
-            },
-            icon: const Icon(Icons.exit_to_app),
-          ),
-        ],
       ),
       body: StreamBuilder(
-        stream: ChatFirebaseServices().getMessages(),
+        stream: ChatFirebaseService().getMessages(chatRoomId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
-
           if (!snapshot.hasData ||
               snapshot.data!.docs.isEmpty ||
               snapshot.hasError) {
             return Center(
-              child: Text("Message mavjud emas ${snapshot.error}"),
+              child: Text(
+                "Message mavjud emas ${snapshot.error}",
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
             );
           }
           final messages = snapshot.data!.docs;
@@ -65,66 +77,106 @@ class _RoomMessageScreenState extends State<RoomMessageScreen> {
             children: [
               Expanded(
                 child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    Message message = Message.fromJson(messages[index]);
+                    Message message =
+                        Message.fromQuerySnapshot(messages[index]);
                     return Padding(
                       padding: const EdgeInsets.all(20),
                       child: Container(
                         decoration: const BoxDecoration(
-                          color: Colors.blue,
+                          color: Color.fromARGB(214, 1, 34, 248),
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(12),
                             bottomLeft: Radius.circular(12),
                             topRight: Radius.circular(20),
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              left: 20, right: 20, top: 10, bottom: 10),
-                          child: Text(
-                            message.text,
-                            // messages[index]["name"],
-                            style: const TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 20, right: 20, top: 10, bottom: 10),
+                              child: Text(
+                                message.text,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
-                          ),
+                            const Spacer(),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                right: 5,
+                                top: 40,
+                                bottom: 2,
+                              ),
+                              child: Text(
+                                DateFormat("HH:mm")
+                                    .format(message.timestamp.toDate()),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          ],
                         ),
                       ),
                     );
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 10, right: 10, bottom: 10, top: 10),
-                child: TextFormField(
-                  controller: smsTextEditingController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        chatFirebaseServices.sendMessage(
-                          FirebaseAuth.instance.currentUser!.email.toString(),
-                          widget.email,
-                          smsTextEditingController.text,
-                        );
-                        smsTextEditingController.clear();
-                      },
-                      icon: const Icon(
-                        Icons.send,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             ],
           );
         },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding:
+            const EdgeInsets.only(left: 10, right: 10, bottom: 10, top: 10),
+        child: TextFormField(
+          controller: smsTextEditingController,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            label: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "Write a message...",
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            suffixIcon: IconButton(
+              onPressed: () {
+                chatFirebaseServices.sendMessage(chatRoomId: chatRoomId, data: {
+                  "text": smsTextEditingController.text,
+                  "sender-email": widget.email,
+                  "time-stamp": FieldValue.serverTimestamp(),
+                });
+                FirebasePushNotificationService.sendNotificationMessage(
+                  title: smsTextEditingController.text,
+                  token: widget.token,
+                  body: smsTextEditingController.text,
+                );
+                print(widget.token);
+                print("object");
+                smsTextEditingController.clear();
+              },
+              icon: const Icon(
+                Icons.send,
+                color: Colors.blue,
+              ),
+            ),
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
     );
   }

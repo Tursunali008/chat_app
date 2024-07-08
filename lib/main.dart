@@ -1,5 +1,4 @@
-
-import 'package:chat_app/controller/chat_controller.dart';
+import 'package:chat_app/controller/auth_controller.dart';
 import 'package:chat_app/firebase_options.dart';
 import 'package:chat_app/views/screens/contacts_screen.dart';
 import 'package:chat_app/views/screens/login_screen.dart';
@@ -10,10 +9,10 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
 
   runApp(const MyApp());
 }
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) {
-        return ChatController();
+        return AuthController();
       },
       builder: (context, child) {
         return MaterialApp(
@@ -41,11 +40,7 @@ class MyApp extends StatelessWidget {
               final data = snapshot.data;
               return data == null
                   ? const LoginScreen()
-                  : PageView(
-                      children: const [
-                        ContactsScreen(),
-                      ],
-                    );
+                  : const ContactsScreen();
             },
           ),
         );

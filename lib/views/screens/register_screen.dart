@@ -1,5 +1,4 @@
-
-import 'package:chat_app/services/user_servise.dart';
+import 'package:chat_app/services/users_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:zoom_tap_animation/zoom_tap_animation.dart';
@@ -28,9 +27,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: passwordTextController.text,
       )
           .then(
-        (user) {
-          userFirebaseServices.addUser(nameTextController.text);
-          Navigator.pop(context);
+        (_) async {
+          await userFirebaseServices.addUser(nameTextController.text).then(
+            (value) {
+              Navigator.pop(context);
+            },
+          );
         },
       );
     }
@@ -121,7 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        labelText: "Matyoz",
+                        labelText: "Ism",
                         labelStyle: const TextStyle(color: Colors.white),
                         errorBorder: const OutlineInputBorder(
                           borderSide: BorderSide(

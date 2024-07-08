@@ -1,4 +1,3 @@
-
 import 'package:chat_app/views/screens/register_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -119,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        labelText: "123456789",
+                        labelText: "12345678",
                         labelStyle: const TextStyle(color: Colors.white),
                         errorBorder: const OutlineInputBorder(
                           borderSide: BorderSide(

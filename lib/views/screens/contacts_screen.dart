@@ -1,7 +1,8 @@
-
+import 'package:chat_app/controller/auth_controller.dart';
 import 'package:chat_app/controller/users_controller.dart';
 import 'package:chat_app/views/screens/massage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:zoom_tap_animation/zoom_tap_animation.dart';
 
 // ignore: must_be_immutable
@@ -17,81 +18,114 @@ class _ContactsScreenState extends State<ContactsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(0, 26, 28, 50),
       appBar: AppBar(
+        backgroundColor: const Color.fromARGB(0, 26, 28, 50),
+        foregroundColor: Colors.white,
         centerTitle: true,
-        title: const Text(
-          "Contacts",
-          style: TextStyle(
-            fontSize: 23,
-            fontWeight: FontWeight.bold,
-          ),
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.perm_contact_calendar_outlined,
+              color: Colors.blue,
+            ),
+            SizedBox(width: 10),
+            Text(
+              "Contacts",
+              style: TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await context.read<AuthController>().signOut();
+            },
+            icon: const Icon(
+              Icons.exit_to_app,
+            ),
+          ),
+        ],
       ),
-      body: StreamBuilder(
-        stream: userController.list,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+      body: Padding(
+        padding: const EdgeInsets.only(top: 25),
+        child: StreamBuilder(
+          stream: userController.list,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text("Message mavjud emas"),
-            );
-          }
-          final messages = snapshot.data!.docs;
-
-          return ListView.builder(
-            itemCount: messages.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: ZoomTapAnimation(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return RoomMessageScreen(
-                            email: messages[index]['user-email']);
-                      },
-                    ));
-                  },
-                  child: ListTile(
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          messages[index]["user-name"],
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          messages[index]["user-email"],
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    leading: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: const Icon(Icons.person),
-                    ),
-                    
-                  ),
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(
+                child: Text(
+                  "Contact mavjud emas",
+                  style: TextStyle(color: Colors.white),
                 ),
               );
-            },
-          );
-        },
+            }
+            final messages = snapshot.data!.docs;
+
+            return ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: ZoomTapAnimation(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (context) {
+                          return RoomMessageScreen(
+                            index: index,
+                            email: messages[index]['user-email'],
+                            token: messages[index]["user-token"],
+                          );
+                        },
+                      ));
+                    },
+                    child: ListTile(
+                      minVerticalPadding: 20,
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            messages[index]["user-name"],
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            messages[index]["user-email"],
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      leading: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

@@ -4,32 +4,21 @@ class Message {
   final String id;
   final String senderId;
   final String text;
-  final String fromUserId;
   final Timestamp timestamp;
 
-  Message({
+ const  Message({
     required this.id,
     required this.senderId,
     required this.text,
-    required this.fromUserId,
     required this.timestamp,
   });
 
-  factory Message.fromJson(QueryDocumentSnapshot query) {
+  factory Message.fromQuerySnapshot(QueryDocumentSnapshot query) {
     return Message(
       id: query.id,
-      senderId: query["toUserId"],
-      text: query["text"],
-      fromUserId: query['fromUserId'],
-      timestamp: query["timestamp"] ?? Timestamp.now(),
+      senderId: query['sender-email'] ?? 'unknown',
+      text: query['text'] ?? '',
+      timestamp: query['time-stamp'] ?? Timestamp.now(),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'senderId': senderId,
-      'text': text,
-      'timestamp': timestamp,
-    };
   }
 }

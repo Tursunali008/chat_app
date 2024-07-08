@@ -1,22 +1,21 @@
-import 'package:firebase_cloud_firestore/firebase_cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-class UsersFirebaseServices {
-  final _userCollection = FirebaseFirestore.instance.collection("users");
-  Stream<QuerySnapshot> getMessages() {
-    return _userCollection.snapshots();
+class UserFirebaseServices {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Stream<QuerySnapshot> getUsers() async* {
+    yield* _firestore.collection('users').snapshots();
   }
 
-  Future<void> sendMessage(
-      String fromUserId, String toUserId, String text) async {
-    // Firestore instance olamiz
-    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  Future<void> addUser(String name) async {
 
-    // Yangi hujjat yaratamiz va ma'lumotlarni saqlaymiz
-    await firestore.collection('messages').add({
-      'fromUserId': fromUserId,
-      'toUserId': toUserId,
-      'text': text,
-      'timestamp': FieldValue.serverTimestamp(), // vaqtni saqlash uchun
-    });
+    Map<String, dynamic> data = {
+      "user-name": name,
+      'user-email': FirebaseAuth.instance.currentUser!.email,
+      'user-token': await FirebaseMessaging.instance.getToken(),
+    };
+    _firestore.collection('users').add(data);
   }
 }
